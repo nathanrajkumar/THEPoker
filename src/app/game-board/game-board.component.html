@@ -1,0 +1,29 @@
+<div class="game-board" >
+  <div id = "card-tray" class="container card-tray">
+
+    <div class="row justify-content-center cards">
+      <div class="column">
+        <img id = "tray_card_1" class = "card"/>
+      </div>
+      <div class="column">
+        <img id = "tray_card_2" class = "card"/>
+      </div>
+      <div class="column">
+        <img id = "tray_card_3" class = "card"/>
+      </div>
+      <div class="column">
+        <img id = "tray_card_4" class = "card"/>
+      </div>
+      <div class="column">
+        <img id = "tray_card_5" class = "card"/>
+      </div>
+    </div>
+  </div>
+  <div   *ngFor = "let player of players; let i = index"  class="place_card_{{i}} " >
+    <app-player-card  [players] = "players" [player] = player class="player_card" [activePlayer] ="activePlayer" [currentBet] = "currentBet" [callAmount] ="callAmount" (betEvent) = "getPotAmount($event)"  (turnEndEvent) = "getNextPlayer($event)" ></app-player-card>
+  </div>
+  <label id = "pot_value" class = "pot_value">${{betAmount}}</label>
+  <img id = "chips" src='../../assets/casino_chips_nobk.png' class="chips"/>
+
+
+</div>

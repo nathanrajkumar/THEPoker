@@ -1,0 +1,19 @@
+<div #playerCards id = "player_decision_{{player.id}}" class="btn-group" >
+  <button type="button" class="btn btn-success dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+  <button type="button" class="btn btn-success">Action</button>
+
+  <div  class="dropdown-menu">
+    <form [formGroup]="betForm" class="px-3 py-2">
+      <div class="form-group">
+        <label for="bet_amount" style="font-weight: bold;">Current Bet Value: ${{currentBet}}</label>
+        <input type="text" class="form-control" id="bet_amount" placeholder="$0"  name = bet formControlName="bet">
+        <p-message severity="error" text="Please call, raise or fold" *ngIf="!betForm.controls['bet'].valid"></p-message>
+      </div>
+      <button pButton type="button" label="{{currentBet == null ? 'Bet' : 'Raise'}}" class="ui-button-raised ui-button-rounded" (click) = "submitBet()"></button>
+      <button pButton type="button" label="Call ${{callAmount}}" class="ui-button-raised ui-button-rounded ui-button-success" (click) = "call()"></button>
+    </form>
+
+    <div class="dropdown-divider"></div>
+    <a class="dropdown-item" href="#">Fold</a>
+  </div>
+</div>

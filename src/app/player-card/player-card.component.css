@@ -1,0 +1,23 @@
+.player_face {
+  /* border: 1px solid grey; */
+  width : 165px;
+  height: 165px;
+}
+
+.player_hand {
+  /* border: 1px solid grey; */
+  width : 90px;
+  height: 90px;
+}
+
+label {
+  color: white;
+  background-color: black;
+  border-radius: 15px;
+  padding-left: 40px;
+  padding-right: 40px;
+  font-weight: bold;
+  font-family: 'Arial';
+}
+
+

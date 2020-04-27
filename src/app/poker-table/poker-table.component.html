@@ -1,0 +1,30 @@
+<div class="container">
+  <p-carousel [value]="rooms" [numVisible] = "3" [numScroll] = "1" [responsiveOptions] = "responsiveOptions">
+    <ng-template let-room pTemplate="item">
+      <div class="room-details">
+        <div class="p-grid p-nogutter">
+            <div class="p-col-12 room-data">
+              <p class="lead">{{room.name}}</p>
+              <p>Created By : {{room.creator}}</p>
+                <div class="table-subtitle" *ngFor = "let table of room.tables">
+                  <h6>{{table.tableName}} | {{table.tableCreator}}</h6>
+                  <p>Starting Pot: ${{table.startingPot}} <br>Player Count : {{table.playerCount}}</p>
+                  <button pButton type="button" class="ui-button-secondary" icon="pi pi-search" name="listActivePlayers" (click) = "getActivePlayers(table)"></button>
+                  <button pButton type="button" class="ui-button-secondary" icon="pi pi-star" name="joinGame" (click) = "navigateToJoinGame(table.id)"></button>
+                  <button pButton type="button" class="ui-button-secondary" icon="pi pi-times" name="leaveGame" (click) = "leaveGame(room.tables, table.id)" (dataChangedEvent) = "loadData()"></button>
+                </div>
+
+                <div class="room-buttons">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+    </ng-template>
+    <div>
+
+    </div>
+  </p-carousel>
+  <p-toast [style]="{marginTop: '80px'}"></p-toast>
+</div>

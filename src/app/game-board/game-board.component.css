@@ -1,0 +1,60 @@
+.game-board {
+  background: url('/../../assets/pokerTable.jpg') no-repeat center center fixed;
+  -webkit-background-size: cover;
+  -moz-background-size: cover;
+  -o-background-size: cover;
+  background-size: cover;
+  height: 92vh;
+  width: 100vw;
+}
+
+.card-tray {
+  position: fixed;
+  /* border: 1px solid grey; */
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  width: 600px;
+  height: 150px;
+  top: 230px;
+  left: 450px;
+}
+
+.column {
+  float: left;
+  width: 20%;
+}
+
+.cards {
+  /* border: 1px solid grey; */
+  margin-left: auto;
+  margin-right: auto;
+  padding-top: 8%;
+}
+
+.card {
+  /* border: 1px solid grey; */
+  width: 100px;
+  height: 100px;
+}
+
+label {
+  color: white;
+  background-color: black;
+  border-radius: 15px;
+  padding-left: 50px;
+  padding-right: 50px;
+  font-weight: bold;
+  font-family: 'Arial';
+}
+
+.chips {
+  position:  fixed;
+}
+
+
+
+
+
