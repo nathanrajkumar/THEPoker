@@ -93,7 +93,7 @@ export class ImageService {
     } else if (canvas.id === 'player_face_3') {
       canvas.style.top = '80px';
       canvas.style.left = '1100px';
-    } else if (canvas.id === 'player_face_4') {
+    } else if (canvas.id === 'player_face_6') {
       canvas.style.top = '400px';
       canvas.style.left = '150px';
     } else if (canvas.id === 'player_face_5') {
@@ -119,7 +119,7 @@ export class ImageService {
       } else if (canvas.id === "player_hand_3") {
         canvas.style.top = '80px';
         canvas.style.left = '1250px';
-      } else if (canvas.id === "player_hand_4") {
+      } else if (canvas.id === "player_hand_6") {
         canvas.style.top = '400px';
         canvas.style.left = '300px';
       } else if (canvas.id === "player_hand_5") {
@@ -144,7 +144,7 @@ export class ImageService {
     } else if (label.id === "player_chip_value_3") {
       label.style.top = '230px';
       label.style.left = '1180px';
-    } else if (label.id === "player_chip_value_4") {
+    } else if (label.id === "player_chip_value_6") {
       label.style.top = '550px';
       label.style.left = '230px';
     } else if (label.id === "player_chip_value_5") {
@@ -168,7 +168,7 @@ export class ImageService {
     } else if (btn.id === "player_decision_3") {
       btn.style.top = '70px';
       btn.style.left = '1050px';
-    } else if (btn.id === "player_decision_4") {
+    } else if (btn.id === "player_decision_6") {
       btn.style.top = '380px';
       btn.style.left = '100px';
     } else if (btn.id === "player_decision_5") {

@@ -44,10 +44,8 @@ export class GameService {
 
   setLittleBlind(players : Array<User> , dealer : User, blindAmount : number) : Observable<Array<User>> {
     let littleBlinder = new User();
-    this.getDealerIndex(players, dealer).subscribe(
+    this.getPlayerIndex(players, dealer).subscribe(
       index => {
-        console.log(index);
-        console.log(players[index]);
         if (index === players.length - 1) {
           littleBlinder = players[0];
         } else {
@@ -56,16 +54,17 @@ export class GameService {
       }
     )
     littleBlinder.money = littleBlinder.money - blindAmount;
+    littleBlinder.isLittleBlind = true;
     return of (players);
   }
 
   setBigBlind(players : Array<User> , dealer : User, blindAmount : number) : Observable<Array<User>> {
     let bigBlinder = new User();
-    this.getDealerIndex(players, dealer).subscribe(
+    this.getPlayerIndex(players, dealer).subscribe(
       index => {
         //5
         if (index === players.length - 1) {
-          bigBlinder = players[1]
+          bigBlinder = players[1];
           //4
         } else if (index === players.length - 2) {
           bigBlinder = players[0];
@@ -79,15 +78,57 @@ export class GameService {
       }
     )
     bigBlinder.money = bigBlinder.money - blindAmount;
+    bigBlinder.isBigBlind = true;
     console.log(players);
     return of (players);
   }
 
-  getDealerIndex(players : Array<User>, dealer : User) : Observable<number> {
-    return of (players.findIndex(player => player.id === dealer.id))
+  setUnderTheGun(players: Array<User>, bigBlinder : User) : Observable<Array<User>> {
+    let underTheGun = new User();
+    this.getPlayerIndex(players, bigBlinder).subscribe(
+      (index) => {
+        if(index === players.length - 1) {
+          underTheGun = players[0]
+        } else {
+          underTheGun = players[index + 1];
+        }
+      }
+    )
+    underTheGun.isUnderTheGun = true;
+    console.log(players);
+    return of (players);
   }
 
+  getPlayerIndex(players : Array<User>, player : User) : Observable<number> {
+    return of (players.findIndex(p => p.id === player.id))
+  }
 
+  initializeCallAmount(players : Array<User>,  bigBlindAmount : number, littleBlindAmount : number , callAmount : number, betMap : Map<number, number>) : Observable<Map<number, number>> {
+    for (const player of players) {
+      if (player.isDealer || player.isBigBlind) {
+        callAmount = bigBlindAmount
+        betMap.set(player.id, callAmount);
+      } else if (player.isLittleBlind) {
+        callAmount = bigBlindAmount - littleBlindAmount
+        betMap.set(player.id, callAmount);
+      } else {
+        callAmount = bigBlindAmount;
+        betMap.set(player.id, callAmount);
+      }
+    }
+    return of (betMap);
+  }
+
+  getCallAmount(player : User, originalCallAmount : number, previousBetAmount : number, raisedBy : number, raiseArray : Array<number>) : Observable<number> {
+    console.log(player.id);
+    console.log(raiseArray);
+    let raiseAmount = raiseArray.reduce((a, b) => a + b, 0);
+    let newCallAmount : number;
+    newCallAmount = originalCallAmount + raiseAmount;
+
+    console.log(newCallAmount);
+    return of (newCallAmount);
+  }
 
 
 

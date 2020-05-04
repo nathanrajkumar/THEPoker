@@ -20,9 +20,9 @@
     </div>
   </div>
   <div   *ngFor = "let player of players; let i = index"  class="place_card_{{i}} " >
-    <app-player-card  [players] = "players" [player] = player class="player_card" [activePlayer] ="activePlayer" [currentBet] = "currentBet" [callAmount] ="callAmount" (betEvent) = "getPotAmount($event)"  (turnEndEvent) = "getNextPlayer($event)" ></app-player-card>
+    <app-player-card  [players] = "players" [player] = player class="player_card" [activePlayer] ="activePlayer" [currentBet] = "currentBet" [callAmount] ="callAmount" (betEvent) = "processBet($event)"  (turnEndEvent) = "getNextPlayer($event)" ></app-player-card>
   </div>
-  <label id = "pot_value" class = "pot_value">${{betAmount}}</label>
+  <label id = "pot_value" class = "pot_value">${{potAmount}}</label>
   <img id = "chips" src='../../assets/casino_chips_nobk.png' class="chips"/>
 
 

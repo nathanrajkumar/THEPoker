@@ -8,4 +8,8 @@ export class User {
   money : number
   loggedIn : boolean
   isDealer : boolean
+  isBigBlind : boolean
+  isLittleBlind : boolean
+  isUnderTheGun : boolean
+  call : number
 }

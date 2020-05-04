@@ -32,17 +32,21 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
   dealer = new User();
   activePlayer : User;
 
-  betAmount = 0 ;
-  potAmount = 0;
+  potAmount = 0 ;
+  betAmount = 0;
   currentBet : number;
   callAmount : number;
   hasBet = false;
+  raiseAmount = 0;
+  raiseArray = new Array<number>();
 
   betAmountCheck = new Array<number>();
   allBetList = new Array<number>();
   betMap = new Map<number, number>();
   callDifference : number ;
   bigBlind: number;
+  littleBlind : number;
+  callCheck = new Map();
 
   @Output() currentBetEvent = new EventEmitter();
 
@@ -55,11 +59,11 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
 
   ngOnInit(): void {
     this.onGameLoad();
+    this.loadBettingRound();
 
   }
 
   onGameLoad() {
-
     for (let i = 1; i <= 5; i ++) {
       this.trayImages.push(<HTMLImageElement>document.getElementById(`tray_card_${i}`));
     }
@@ -87,9 +91,7 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
         this.players = next;
       }
     )
-    // PRE-FLOP ANTE AND BETTING
 
-    //TODO: create ante - big blind and little blind -- blind amounts are stacked at 10% of the lowest chip amount
 
     this.cardService.burnAndTurn(this.shuffledDeck, this.players, 5).subscribe(
       (next) => {
@@ -102,20 +104,20 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     this.turn = this.cardTrayCards[3];
     this.river = this.cardTrayCards[4];
 
-    // need to do pre flop betting first before burn and turn
-
-
     this.gameService.setDealer(this.players).subscribe(
       (players) => {
         for (const player of players) {
           if (player.isDealer === true) {
             this.dealer = player;
-            this.activePlayer = player;
           }
         }
       }
     )
-    console.log(`Dealer : ${this.activePlayer.name}`);
+
+  }
+
+  loadBettingRound() {
+
 
     // PRE-FLOP ANTE AND BETTING
 
@@ -125,20 +127,33 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     this.gameService.setLittleBlind(this.players, this.dealer, 25).subscribe (
       players => {
         this.players = players;
-        this.betAmount = this.betAmount + 25;
+        this.potAmount = this.potAmount + 25;
+        this.littleBlind = 25;
       }
     )
 
     this.gameService.setBigBlind(this.players, this.dealer, 50).subscribe (
       players => {
         this.players = players;
-        this.betAmount = this.betAmount + 50;
+        this.potAmount = this.potAmount + 50;
         this.bigBlind = 50;
       }
     )
 
-    this.callAmount = this.bigBlind;
+    this.gameService.setUnderTheGun(this.players, this.players.find(p => p.isBigBlind === true)).subscribe (
+      players => {
+        this.players = players;
+        this.activePlayer = players.find(p => p.isUnderTheGun === true);
+      }
+    )
 
+    this.gameService.initializeCallAmount(this.players, this.bigBlind, this.littleBlind, this.callAmount, this.betMap).subscribe(
+      (callAmountMap) => {
+        this.betMap = callAmountMap;
+        this.callAmount = this.betMap.get(this.dealer.id);
+
+      }
+    )
   }
 
   processUrlParams() {
@@ -153,6 +168,7 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
   ngAfterViewChecked() {
     const activeBtn = <HTMLButtonElement>document.getElementById(`player_decision_${this.activePlayer.id}`);
     this.imageService.getLayoutPositioningDecisionButton(activeBtn).subscribe();
+
   }
 
   ngAfterViewInit() {
@@ -164,8 +180,6 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     chipsImage.style.width = '7%';
     chipsImage.style.top = '210px';
     chipsImage.style.left = '970px';
-
-
   }
 
   getLayoutPositioningPot(label : HTMLLabelElement) {
@@ -174,71 +188,61 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     label.style.left = '900px';
   }
 
-  getPotAmount(betAmount : string) {
-    this.betAmount = this.betAmount + parseInt(betAmount);
-    this.betAmountCheck.push(parseInt(betAmount));
-    this.allBetList.push(parseInt(betAmount));
-    this.betMap.set(this.activePlayer.id, parseInt(betAmount));
-    const firstBetter = this.betMap.entries().next().value;
-    //this.checkForBettingRoundEnd(firstBetter ,this.betAmountCheck, parseInt(betAmount));
-    this.currentBet = this.betAmountCheck[0];
+  processBet(betAmount : string) {
+    this.betAmount = parseInt(betAmount);
+    this.potAmount = this.potAmount + this.betAmount;
+    this.betAmountCheck.push(this.betAmount);
+    this.allBetList.push(this.betAmount);
+
+    if (this.betAmount !== this.callAmount){
+      this.raiseAmount = this.betAmount - this.callAmount;
+      this.raiseArray.push(this.raiseAmount);
+      // erase has called array
+      this.callCheck.forEach((val, key) => {
+        this.callCheck.delete(key);
+      })
+    }
+
+    const originalCallAmount = this.betMap.get(this.activePlayer.id);
+    if (this.betAmount ===  this.allBetList[length]) {
+      this.callCheck.set(this.activePlayer.id, "has called" );
+    } else if (this.activePlayer.isLittleBlind && (originalCallAmount + this.betAmount) === this.allBetList[length]) {
+      this.callCheck.set(this.activePlayer.id, "little blind has called");
+    } else if (this.betAmount === this.allBetList[length] + this.raiseAmount) {
+      this.callCheck.set(this.activePlayer.id, "has called with raise");
+    } else if (this.activePlayer.isBigBlind && this.betAmount === 0) {
+      this.callCheck.set(this.activePlayer.id, "big blind has called");
+    }
+
+
   }
 
   getNextPlayer(player : string) {
+    //this.hasBet = true;
     this.activePlayer = <User>JSON.parse(player);
-    const firstBetter = this.betMap.entries().next().value;
+    this.callAmount = this.betMap.get(this.activePlayer.id);
 
-    this.checkForBettingRoundEnd(firstBetter ,this.betAmountCheck, this.betAmount);
-  }
+    this.gameService.getCallAmount(this.activePlayer, this.callAmount, this.betAmount, this.raiseAmount, this.raiseArray).subscribe(
+      (callAmount) => {
+        this.callAmount = callAmount;
+        if (this.activePlayer.isBigBlind && this.raiseAmount === 0) {
+          this.callAmount = 0;
+        } else if (this.activePlayer.isBigBlind && this.raiseAmount > 0) {
+          this.callAmount = this.raiseAmount;
+        }
+      }
+    )
 
-  checkForBettingRoundEnd(firstBetter : Map<number, number>, betAmountCheck : Array<number>, betAmount : number) {
-
-    const firstBetKey = firstBetter[0];
-    const firstBetValue = firstBetter[1];
-    console.log(this.activePlayer.id)
-    console.log(firstBetKey);
-    console.log(betAmountCheck.length);
-    // check to see if the loop has come back to the dealer to determine call amount
-    if (this.activePlayer.id === firstBetKey && betAmountCheck.length > 1) {
-      console.log("circled around to dealer");
-      this.hasBet = true;
+    if(this.callCheck.size === this.players.length) {
+      this.imageService.getCardImagePath(this.flop).subscribe(
+        (cardImages) => {
+          for(let i = 0; i < this.flop.length; i++) {
+            this.trayImages[i].src = cardImages[i]
+          }
+        }
+      );
     }
 
-    const allEqual = betCheckArray => betCheckArray.every( val => val === betCheckArray[0]);
-
-    // if all the values in betAmountCheck is not equal, then get the difference between the first bet value and the current bet
-    // to get the raise amount.  If there is a previous bet aka after the first round of betting, just get the difference to get the
-    // amount to call.
-
-    // During pre betting, the amount to call is the big blind.
-
-    if (!allEqual(betAmountCheck)) {
-      this.callDifference = betAmountCheck[betAmountCheck.length -1] - firstBetValue;
-      console.log(betAmount);
-      console.log( betAmountCheck[betAmountCheck.length]);
-      console.log(`Previous Bet: ${betAmountCheck[betAmountCheck.length - 2]}`)
-      console.log(`Raised : ${this.callDifference}`);
-      console.log(`original bet: ${firstBetValue}`);
-      console.log(`difference between bet now vs bet before: ${this.callDifference}`);
-      if (this.callDifference > 0) {
-        this.callAmount = firstBetValue + this.callDifference;
-        console.log(`add difference to original bet to get call amount : ${this.callAmount}`);
-      }
-      console.log(this.hasBet);
-
-      if (this.hasBet) {
-        this.callAmount = this.callDifference;
-      }
-
-      console.log(`To call : ${this.callAmount}`);
-      // erase temp array and push new control value
-      betAmountCheck.splice(0, this.betAmountCheck.length);
-      betAmountCheck.push(betAmount);
-
-    }
-    //console.log(`Call : ${fullBetList[0] + callAmount}`);
-
-    console.log(this.betAmountCheck, this.betAmount, betAmount)
   }
 
 

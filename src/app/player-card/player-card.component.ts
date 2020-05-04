@@ -2,7 +2,6 @@ import { Component, OnInit, Input, AfterViewInit, Output, EventEmitter, SimpleCh
 import { User } from '../model/User';
 import { ImageService } from '../image.service';
 import { GameService } from '../game.service';
-import { timingSafeEqual } from 'crypto';
 
 @Component({
   selector: 'app-player-card',
