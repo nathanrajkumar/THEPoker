@@ -181,5 +181,23 @@ export class ImageService {
     return of (btn);
   }
 
+  flipCard(showCard : boolean, cardImgTray? : Array<HTMLImageElement>, cardArray? : Array<Card>) : Observable<Array<HTMLImageElement>>{
+    if (showCard === true) {
+      this.getCardImagePath(cardArray).subscribe (
+        (stringArray) => {
+          for(let i = 0; i < stringArray.length; i++) {
+            cardImgTray[i].src = stringArray[i]
+          }
+        }
+      )
+    } else {
+      cardImgTray.forEach(img => {
+        img.src = '../../assets/PlayingCards/BACKING.png';
+      })
+    }
+    return of (cardImgTray);
+  }
+
+
 }
 

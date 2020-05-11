@@ -2,6 +2,7 @@ import { Component, OnInit, Input, AfterViewInit, Output, EventEmitter, SimpleCh
 import { User } from '../model/User';
 import { ImageService } from '../image.service';
 import { GameService } from '../game.service';
+import { LiteralArrayExpr } from '@angular/compiler';
 
 @Component({
   selector: 'app-player-card',
@@ -18,26 +19,26 @@ export class PlayerCardComponent implements OnInit, AfterViewInit {
   @Input() activePlayer : User;
   @Input() currentBet : number;
   @Input() callAmount : number;
+  @Input() potAmount : number;
 
   betAmount : number;
   decisionBtn : HTMLButtonElement;
+  playerCards : Array<HTMLImageElement>;
 
   @Output() betEvent = new EventEmitter<number>();
   @Output() turnEndEvent = new EventEmitter();
   @Output() currentBetEvent = new EventEmitter();
+  @Output() getPotAmountEvent = new EventEmitter<number>();
+  @Output() getActivePlayersEvent = new EventEmitter<Array<User>>();
 
-  finishedPlayers = new Array<User>();
+  activePlayers = new Array<User>();
 
   constructor(private imageService : ImageService, private gameService : GameService) { }
 
   ngOnInit(): void {
-    this.player.loggedIn = false;
-    if (this.player.id === 1) {
-      this.player.loggedIn = true;
-    }
-    if (this.player.money == null) {
-      this.player.money = 0;
-    }
+    this.players.forEach(player => {
+      this.activePlayers.push(player);
+    });
   }
 
   ngAfterViewInit() {
@@ -70,18 +71,51 @@ export class PlayerCardComponent implements OnInit, AfterViewInit {
 
   startLoadingCardImages(imgArray : Array<string>) {
     const canvasHand = <HTMLCanvasElement>document.getElementById(`player_hand_${this.player.id}`);
-    this.imageService.loadCardImages(canvasHand, imgArray, "hand").subscribe();
+    this.imageService.loadCardImages(canvasHand, imgArray, "hand").subscribe(
+      (cardImages) => {
+        this.playerCards = cardImages;
+      }
+    );
     this.imageService.getLayoutPositioningHand(canvasHand).subscribe();
   }
 
   getActivePlayer(activePlayer : string) {
     this.activePlayer = JSON.parse(activePlayer);
     this.turnEndEvent.emit(JSON.stringify(this.activePlayer));
-    this.finishedPlayers.push(this.player);
   }
 
   getBetAmount(betAmount : number) {
     this.betAmount = betAmount;
     this.betEvent.emit(this.betAmount);
   }
+
+  foldCards() {
+    this.imageService.flipCard(false, this.playerCards).subscribe();
+    this.activePlayers.find(player => player.id === this.activePlayer.id).isFolded = true;
+    console.log(this.activePlayer);
+
+    console.log(this.activePlayers);
+
+
+    this.activePlayers.splice(0, this.activePlayers.length);
+    this.players.forEach((player) => {
+      if (!player.isFolded) {
+        this.activePlayers.push(player);
+      }
+    });
+    console.log(this.activePlayers);
+
+    this.gameService.getNextTurn(this.players, this.activePlayer).subscribe(
+      (nextPlayer) => {
+        this.activePlayer = nextPlayer;
+        this.turnEndEvent.emit(JSON.stringify(this.activePlayer));
+      }
+    );
+
+    this.getActivePlayersEvent.emit(this.activePlayers);
+
+
+    // if everyones folded?  Reshuffle and deal
+  }
+
 }

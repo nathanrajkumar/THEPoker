@@ -32,12 +32,31 @@ export class GameService {
   }
 
   getNextTurn(players : Array<User>, currentActivePlayer : User) : Observable<User> {
-    const currentPlayerIndex = players.findIndex(player => player.id === currentActivePlayer.id);
+
+    let activePlayers = new Array<User>();
     let nextPlayer : User;
-    if (currentPlayerIndex + 1 != players.length) {
-      nextPlayer = players[currentPlayerIndex + 1];
+    let nextPlayerFind = players.find(player => player.id === currentActivePlayer.id + 1);
+    let currentPlayerIndex = players.findIndex(player => player.id === currentActivePlayer.id);
+    console.log(nextPlayerFind);
+
+    players.forEach( player => {
+      if (!player.isFolded)
+      activePlayers.push(player);
+    })
+    console.log(activePlayers);
+    // if the player in players exists as an active player and is not folded
+    if (currentPlayerIndex < players.length - 1) {
+      if (activePlayers.find(player => player.id === nextPlayerFind.id) && !nextPlayerFind.isFolded ) {
+        nextPlayer = nextPlayerFind;
+      } else {
+        if (activePlayers.findIndex(player => player.id === currentActivePlayer.id) === activePlayers.length -1) {
+          nextPlayer = activePlayers[0];
+        } else {
+          nextPlayer = activePlayers[activePlayers.findIndex(player => player.id === currentActivePlayer.id) + 1];
+        };
+      }
     } else {
-      nextPlayer = players[0];
+      nextPlayer = activePlayers[0];
     }
     return of (nextPlayer);
   }
@@ -119,18 +138,28 @@ export class GameService {
     return of (betMap);
   }
 
-  getCallAmount(player : User, originalCallAmount : number, previousBetAmount : number, raisedBy : number, raiseArray : Array<number>) : Observable<number> {
-    console.log(player.id);
-    console.log(raiseArray);
+  getCallAmount(player : User, originalCallAmount : number, raiseArray : Array<number>) : Observable<number> {
+    console.log("call amount" + originalCallAmount);
     let raiseAmount = raiseArray.reduce((a, b) => a + b, 0);
     let newCallAmount : number;
-    newCallAmount = originalCallAmount + raiseAmount;
+    if (player.bet === 0) {
+      newCallAmount = originalCallAmount + raiseAmount;
+    } else {
+      newCallAmount = originalCallAmount + raiseAmount - player.bet;
+    }
 
-    console.log(newCallAmount);
     return of (newCallAmount);
   }
 
-
-
-
+  clearPlayerBettingRoundAttributes(players : Array<User>) : Observable<Array<User>> {
+    players.forEach((player) => {
+      player.isBigBlind = false;
+      player.isLittleBlind = false;
+      player.isCalled = false;
+      player.isUnderTheGun = false;
+      player.isDealer = false;
+      player.bet = 0;
+    })
+    return of (players);
+  }
 }

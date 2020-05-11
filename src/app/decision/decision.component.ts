@@ -17,11 +17,13 @@ export class DecisionComponent implements OnInit, OnChanges {
   @Input() activePlayer;
   @Input() currentBet;
   @Input() callAmount;
+  @Input() potAmount;
+  @Input() activePlayers;
 
   betAmount : number ;
 
   @Output() betPlacedEvent = new EventEmitter();
-  @Output() turnEndEvent = new EventEmitter();
+  @Output() foldCardsEvent = new EventEmitter();
   @Output() activePlayerEvent = new EventEmitter();
 
   betForm : FormGroup;
@@ -38,18 +40,19 @@ export class DecisionComponent implements OnInit, OnChanges {
 
   ngOnChanges( changes : SimpleChanges) {
     this.activePlayer = changes['activePlayer'].currentValue;
-    //console.log(changes);
+    console.log(changes);
   }
 
   submitBet() {
-    //console.log(this.betForm.controls.bet.value);
     this.player.money = this.player.money - this.betForm.controls.bet.value;
     this.betPlacedEvent.emit(this.betForm.controls.bet.value.toString());
+    this.player.bet = this.betForm.controls.bet.value;
     this.getNextTurn(this.player);
-    this.betForm.controls.bet.setValidators(Validators.min(this.betForm.controls.bet.value))
+    this.betForm.controls.bet.setValidators(Validators.min(this.callAmount));
   }
 
   getNextTurn(currentActivePlayer : User) {
+    console.log(this.activePlayers);
     this.gameService.getNextTurn(this.players, currentActivePlayer).subscribe(
       (player) => {
         this.activePlayer = player;
@@ -60,8 +63,13 @@ export class DecisionComponent implements OnInit, OnChanges {
   }
 
   call() {
-    console.log('call');
-    console.log(this.currentBet);
-    console.log(this.callAmount);
+    this.player.money = this.player.money - this.callAmount;
+    this.player.bet = this.callAmount;
+    this.betPlacedEvent.emit(this.callAmount);
+    this.getNextTurn(this.player);
+  }
+
+  fold() {
+    this.foldCardsEvent.emit();
   }
 }

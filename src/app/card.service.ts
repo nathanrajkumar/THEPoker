@@ -3,6 +3,7 @@ import { Card, Suit, Name } from './model/Card';
 import { User } from './model/User';
 import { Observable, of } from 'rxjs';
 import { GameService } from './game.service';
+import { ImageService } from './image.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,7 @@ export class CardService {
   cards : Array<Card>;
   shuffledDeck : Array<Card>;
 
-  constructor(private gameService : GameService) { }
+  constructor(private gameService : GameService, private imageService : ImageService) { }
 
   getDeckOfCards() : Observable<Array<Card>> {
     this.cards = new Array<Card>();
@@ -86,4 +87,6 @@ export class CardService {
 
     return of (cardsToTurn)
   }
+
+
 }

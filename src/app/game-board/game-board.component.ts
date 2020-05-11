@@ -1,4 +1,4 @@
-import { EventEmitter, Component, OnInit, Input, AfterViewInit, OnChanges, SimpleChanges, AfterContentChecked, ViewChild, ElementRef, ViewChildren, QueryList, AfterViewChecked, Output } from '@angular/core';
+import { EventEmitter, Component, OnInit, AfterViewInit, AfterViewChecked, Output, Input } from '@angular/core';
 import { Card } from '../model/Card';
 import { DataService } from '../data.service';
 import { User } from '../model/User';
@@ -7,7 +7,6 @@ import { ImageService } from '../image.service';
 import { CardService } from '../card.service';
 import { Table } from '../model/Table';
 import { GameService } from '../game.service';
-import { PlayerCardComponent } from '../player-card/player-card.component';
 
 @Component({
   selector: 'app-game-board',
@@ -47,8 +46,11 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
   bigBlind: number;
   littleBlind : number;
   callCheck = new Map();
+  check = new Array<User>();
 
+  @Input() activePlayers;
   @Output() currentBetEvent = new EventEmitter();
+
 
   constructor(private dataService : DataService,
               private cardService : CardService,
@@ -59,7 +61,7 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
 
   ngOnInit(): void {
     this.onGameLoad();
-    this.loadBettingRound();
+    this.loadBettingRound(this.players);
 
   }
 
@@ -68,9 +70,11 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
       this.trayImages.push(<HTMLImageElement>document.getElementById(`tray_card_${i}`));
     }
 
-    for (const img of this.trayImages) {
-      img.src = '../../assets/PlayingCards/BACKING.png';
-    }
+    this.imageService.flipCard(false, this.trayImages).subscribe(
+      (cardTrayImages) => {
+        this.trayImages = cardTrayImages;
+      }
+    );
 
     //GAME SETUP AND DEAL
 
@@ -78,6 +82,10 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     this.dataService.getTable(this.roomId, this.tableId).subscribe(
       (table) => {
         this.players = table.players;
+        this.players.forEach((player) => {
+          player.bet = 0;
+        })
+        this.activePlayers = table.players;
         this.table = table;
       }
     )
@@ -116,14 +124,8 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
 
   }
 
-  loadBettingRound() {
-
-
-    // PRE-FLOP ANTE AND BETTING
-
-    //TODO: create ante - big blind and little blind -- blind amounts are stacked at 10% of the lowest chip amount
-
-
+  loadBettingRound(players : Array<User>) {
+    this.gameService.clearPlayerBettingRoundAttributes(this.players).subscribe();
     this.gameService.setLittleBlind(this.players, this.dealer, 25).subscribe (
       players => {
         this.players = players;
@@ -154,6 +156,7 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
 
       }
     )
+
   }
 
   processUrlParams() {
@@ -188,6 +191,11 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
     label.style.left = '900px';
   }
 
+  getActivePlayers(playerList : Array<User>) {
+    console.log(playerList);
+    this.activePlayers = playerList;
+  }
+
   processBet(betAmount : string) {
     this.betAmount = parseInt(betAmount);
     this.potAmount = this.potAmount + this.betAmount;
@@ -205,24 +213,28 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
 
     const originalCallAmount = this.betMap.get(this.activePlayer.id);
     if (this.betAmount ===  this.allBetList[length]) {
+      this.activePlayer.isCalled = true;
       this.callCheck.set(this.activePlayer.id, "has called" );
     } else if (this.activePlayer.isLittleBlind && (originalCallAmount + this.betAmount) === this.allBetList[length]) {
+      this.activePlayer.isCalled = true;
       this.callCheck.set(this.activePlayer.id, "little blind has called");
     } else if (this.betAmount === this.allBetList[length] + this.raiseAmount) {
+      this.activePlayer.isCalled = true;
       this.callCheck.set(this.activePlayer.id, "has called with raise");
     } else if (this.activePlayer.isBigBlind && this.betAmount === 0) {
+      this.activePlayer.isCalled = true;
       this.callCheck.set(this.activePlayer.id, "big blind has called");
     }
 
-
+    if (this.activePlayer.isCalled) {
+      this.check.push(this.activePlayer)
+    }
   }
 
   getNextPlayer(player : string) {
-    //this.hasBet = true;
     this.activePlayer = <User>JSON.parse(player);
     this.callAmount = this.betMap.get(this.activePlayer.id);
-
-    this.gameService.getCallAmount(this.activePlayer, this.callAmount, this.betAmount, this.raiseAmount, this.raiseArray).subscribe(
+    this.gameService.getCallAmount(this.activePlayer, this.callAmount, this.raiseArray).subscribe(
       (callAmount) => {
         this.callAmount = callAmount;
         if (this.activePlayer.isBigBlind && this.raiseAmount === 0) {
@@ -232,15 +244,13 @@ export class GameBoardComponent implements OnInit, AfterViewInit, AfterViewCheck
         }
       }
     )
-
-    if(this.callCheck.size === this.players.length) {
-      this.imageService.getCardImagePath(this.flop).subscribe(
-        (cardImages) => {
-          for(let i = 0; i < this.flop.length; i++) {
-            this.trayImages[i].src = cardImages[i]
-          }
+    if(this.check.length === this.activePlayers.length) {
+      this.imageService.flipCard(true, this.trayImages, this.flop).subscribe(
+        (cardImgTray) => {
+          this.trayImages = cardImgTray;
         }
       );
+      this.loadBettingRound(this.activePlayers);
     }
 
   }

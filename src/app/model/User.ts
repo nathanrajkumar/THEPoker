@@ -6,10 +6,12 @@ export class User {
   password : string
   hand : Array<Card>
   money : number
-  loggedIn : boolean
+  bet : number
+  isLoggedIn : boolean
   isDealer : boolean
   isBigBlind : boolean
   isLittleBlind : boolean
   isUnderTheGun : boolean
-  call : number
+  isFolded : boolean
+  isCalled : boolean
 }

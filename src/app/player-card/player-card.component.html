@@ -4,5 +4,5 @@
     <canvas id = "player_hand_{{player.id}}" class="player_hand"></canvas>
     <!-- if player is active at the moment, show button.  This will change to show button if player is the one logged in -->
     <!-- *ngIf = "player.id === activePlayer.id" -->
-    <app-decision  [players] = "players" [player] = "player" [activePlayer] = "activePlayer" [currentBet] = "currentBet" [callAmount] = "callAmount" (activePlayerEvent) = "getActivePlayer($event)" (betPlacedEvent) = "getBetAmount($event)" *ngIf="player.id === activePlayer.id"></app-decision>
+    <app-decision  [activePlayers] = "activePlayers" [players] = "players" [player] = "player" [activePlayer] = "activePlayer" [currentBet] = "currentBet" [callAmount] = "callAmount" [potAmount] = "potAmount" (activePlayerEvent) = "getActivePlayer($event)" (betPlacedEvent) = "getBetAmount($event)" (foldCardsEvent) = "foldCards()" *ngIf="player.id === activePlayer.id"></app-decision>
   </div>
